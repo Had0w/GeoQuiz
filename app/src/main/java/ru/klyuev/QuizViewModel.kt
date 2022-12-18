@@ -5,8 +5,9 @@ import androidx.lifecycle.ViewModel
 class QuizViewModel : ViewModel() {
 
     var currentIndex = 0
-    var answeredQuestion = 0;
-    var rightAnswers = 0;
+    var answeredQuestion = 0
+    var rightAnswers = 0
+    var isCheater = false
 
     val currentQuestionAnswer: Boolean
     get() = questionsBank[currentIndex].answer
