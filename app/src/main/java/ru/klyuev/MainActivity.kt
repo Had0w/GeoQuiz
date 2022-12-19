@@ -104,6 +104,8 @@ class MainActivity : AppCompatActivity() {
 
         val currentRightQuestion = quizViewModel.currentQuestionAnswer
 
+        var answer = quizViewModel.isCheater
+
         val messageResId = when {
             quizViewModel.isCheater -> R.string.judgment_toast
             userAnswer == currentRightQuestion -> R.string.correct_toast
@@ -132,7 +134,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showResult() {
-        var dialog = AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
         dialog.setMessage(R.string.right_percent)
 
         dialog.setTitle(R.string.right_percent)
