@@ -107,13 +107,17 @@ class MainActivity : AppCompatActivity() {
         var answer = quizViewModel.isCheater
 
         val messageResId = when {
-            quizViewModel.isCheater -> R.string.judgment_toast
-            userAnswer == currentRightQuestion -> R.string.correct_toast
+            quizViewModel.isCheater -> {
+                if (userAnswer == currentRightQuestion) {
+                    ++quizViewModel.rightAnswers
+                }
+                R.string.judgment_toast
+            }
+            userAnswer == currentRightQuestion -> {
+                ++quizViewModel.rightAnswers
+                R.string.correct_toast
+            }
             else -> R.string.incorrect_toast
-        }
-
-        if (messageResId == R.string.correct_toast) {
-            ++quizViewModel.rightAnswers
         }
 
         quizViewModel.isCheater = false
