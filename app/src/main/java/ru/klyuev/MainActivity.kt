@@ -1,8 +1,10 @@
 package ru.klyuev
 
 import android.annotation.SuppressLint
+import android.app.ActivityOptions
 import android.app.AlertDialog
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -27,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         ViewModelProvider(this)[QuizViewModel::class.java]
     }
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -49,21 +51,37 @@ class MainActivity : AppCompatActivity() {
         }
 
         prevButton.setOnClickListener {
-            getPrevQuestion()
+            if (quizViewModel.isCheater) {
+                Toast.makeText(this, R.string.next_after_cheating, Toast.LENGTH_SHORT).show()
+            } else {
+                getPrevQuestion()
+            }
         }
 
         nextButton.setOnClickListener {
-            getNextQuestion()
+            if (quizViewModel.isCheater) {
+                Toast.makeText(this, R.string.next_after_cheating, Toast.LENGTH_SHORT).show()
+            } else {
+                getNextQuestion()
+            }
         }
 
         questionTextView.setOnClickListener {
             getNextQuestion()
         }
 
-        showAnswerButton.setOnClickListener {
+        showAnswerButton.setOnClickListener { view ->
             val answerIsTrue = quizViewModel.currentQuestionAnswer
             val intent = CheatActivity.newIntent(this@MainActivity, answerIsTrue)
-            startActivityForResult(intent, REQUEST_CODE_CHEAT)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val options = ActivityOptions
+                    .makeClipRevealAnimation(view, 0, 0, view.width, view.height)
+                startActivityForResult(intent,
+                    REQUEST_CODE_CHEAT, options.toBundle())
+            } else {
+                startActivityForResult(intent, REQUEST_CODE_CHEAT)
+            }
         }
 
         updateQuestion()
@@ -104,13 +122,12 @@ class MainActivity : AppCompatActivity() {
 
         val currentRightQuestion = quizViewModel.currentQuestionAnswer
 
-        var answer = quizViewModel.isCheater
-
         val messageResId = when {
             quizViewModel.isCheater -> {
                 if (userAnswer == currentRightQuestion) {
                     ++quizViewModel.rightAnswers
                 }
+                ++quizViewModel.countOfCheating
                 R.string.judgment_toast
             }
             userAnswer == currentRightQuestion -> {
@@ -138,16 +155,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showResult() {
-        val dialog = AlertDialog.Builder(this)
-        dialog.setMessage(R.string.right_percent)
+        val resultDialog = AlertDialog.Builder(this)
 
-        dialog.setTitle(R.string.right_percent)
-        dialog.setMessage("${quizViewModel.getRightAnswersPercent()} %")
-        dialog.setPositiveButton("Ok") { dialog, id ->
-            quizViewModel.resetParameters()
-            getNextQuestion()
+        resultDialog.setTitle(R.string.right_percent)
+        resultDialog.setMessage("${quizViewModel.getRightAnswersPercent()}%")
+
+        val cheatingDialog = AlertDialog.Builder(this)
+        cheatingDialog.setTitle(R.string.cheating_times)
+        cheatingDialog.setMessage("${quizViewModel.countOfCheating}")
+
+        resultDialog.setPositiveButton("Ok") { dialog, id ->
+            cheatingDialog.create().show()
             dialog.cancel()
         }
-        dialog.create().show()
+
+        resultDialog.create().show()
+
+        cheatingDialog.setPositiveButton("Ok") { dialog2, id ->
+            quizViewModel.resetParameters()
+            getNextQuestion()
+            dialog2.cancel()
+        }
     }
 }
