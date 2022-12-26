@@ -106,6 +106,7 @@ class MainActivity : AppCompatActivity() {
 
         trueButton.isEnabled = !quizViewModel.isAnswered()
         falseButton.isEnabled = !quizViewModel.isAnswered()
+        showAnswerButton.isEnabled = quizViewModel.countOfCheating < 3
     }
 
     private fun getPrevQuestion() {
